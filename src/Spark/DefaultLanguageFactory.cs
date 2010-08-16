@@ -16,6 +16,7 @@ using Spark.Compiler;
 using Spark.Compiler.CSharp;
 using Spark.Compiler.Javascript;
 using Spark.Compiler.VisualBasic;
+using Spark.Compiler.Oxygene;
 
 namespace Spark
 {
@@ -43,6 +44,9 @@ namespace Spark
                     break;
                 case LanguageType.Javascript:
                     viewCompiler = new JavascriptViewCompiler();
+                    break;
+                case LanguageType.Oxygene:
+                    viewCompiler = new OxygeneViewCompiler();
                     break;
                 default:
                     throw new CompilerException(string.Format("Unknown language type {0}", descriptor.Language));

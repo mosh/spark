@@ -194,7 +194,8 @@ namespace Spark.Web.Mvc
             return value == null ? null : value.ToString();
         }
 
-        public MvcHtmlString HTML(object value)
+        //public MvcHtmlString HTML(object value)
+        public MvcHtmlString ToMvcHtmlString(object value)
         {
             return MvcHtmlString.Create(Convert.ToString(value));
         }

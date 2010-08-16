@@ -25,6 +25,7 @@ using Spark.Compiler.CSharp;
 using Spark.Parser;
 using Spark.FileSystem;
 using Spark.Parser.Syntax;
+using Spark.Compiler.Oxygene;
 
 namespace Spark
 {
@@ -39,7 +40,16 @@ namespace Spark
         public SparkViewEngine(ISparkSettings settings)
         {
             Settings = settings ?? (ISparkSettings)ConfigurationManager.GetSection("spark") ?? new SparkSettings();
-            SyntaxProvider = new DefaultSyntaxProvider(Settings);
+
+            if (Settings.DefaultLanguage == LanguageType.Oxygene)
+            {
+                SyntaxProvider = new OxygeneSyntaxProvider(Settings);
+            }
+            else
+            {
+                SyntaxProvider = new DefaultSyntaxProvider(Settings);
+            }
+
             ViewActivatorFactory = new DefaultViewActivator();
         }
 
@@ -328,7 +338,9 @@ namespace Spark
 
             var batchCompiler = new BatchCompiler { OutputAssembly = outputAssembly };
 
-            var assembly = batchCompiler.Compile(Settings.Debug, "csharp", sourceCode.ToArray());
+            //var assembly = batchCompiler.Compile(Settings.Debug, "csharp", sourceCode.ToArray());
+            var assembly = batchCompiler.Compile(Settings.Debug, Settings.DefaultLanguage.ToString(), sourceCode.ToArray());
+
             foreach (var entry in batch)
             {
                 entry.Compiler.CompiledType = assembly.GetType(entry.Compiler.ViewClassFullName);
@@ -353,13 +365,30 @@ namespace Spark
 
                 var descriptor = ((SparkViewAttribute)attributes[0]).BuildDescriptor();
 
-                var entry = new CompiledViewEntry
+                CompiledViewEntry entry;
+
+                if (Settings.DefaultLanguage == LanguageType.Oxygene)
+                {
+                    entry = new CompiledViewEntry
+                    {
+                        Descriptor = descriptor,
+                        Loader = new ViewLoader(),
+                        Compiler = new OxygeneViewCompiler { CompiledType = type },
+                        Activator = ViewActivatorFactory.Register(type)
+                    };
+
+                }
+                else
+                {
+
+                    entry = new CompiledViewEntry
                                 {
                                     Descriptor = descriptor,
                                     Loader = new ViewLoader(),
                                     Compiler = new CSharpViewCompiler { CompiledType = type },
                                     Activator = ViewActivatorFactory.Register(type)
                                 };
+                }
                 CompiledViewHolder.Store(entry);
 
                 descriptors.Add(descriptor);
